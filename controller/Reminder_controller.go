@@ -2,18 +2,18 @@ package controller
 
 import (
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 	"net/http"
 	"reminders.com/m/Models"
+	"reminders.com/m/Services"
 	"strconv"
 )
 
-func New(db *gorm.DB) *ReminderController {
-	return &ReminderController{db} // <- 33: a very sensible default value
+func New(service *Services.RemindersProviderService) *ReminderController {
+	return &ReminderController{service}
 }
 
 type ReminderController struct {
-	database *gorm.DB
+	reminderService *Services.RemindersProviderService
 }
 
 func (receiver ReminderController) CreateReminder(c echo.Context) error {
@@ -23,7 +23,7 @@ func (receiver ReminderController) CreateReminder(c echo.Context) error {
 		return err
 	}
 
-	receiver.database.Create(&reminder)
+	receiver.reminderService.CreateReminder(reminder)
 	return c.JSON(http.StatusCreated, reminder)
 }
 
@@ -31,7 +31,7 @@ func (receiver ReminderController) GetReminder(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var reminder Models.Reminder
 
-	receiver.database.First(&reminder, id)
+	receiver.reminderService.GetReminder(id, &reminder)
 
 	return c.JSON(http.StatusOK, reminder)
 }
@@ -39,14 +39,13 @@ func (receiver ReminderController) GetReminder(c echo.Context) error {
 func (receiver ReminderController) GetAllReminders(c echo.Context) error {
 	var reminders []Models.Reminder
 
-	receiver.database.Find(&reminders)
+	receiver.reminderService.GetAllReminders(reminders)
 
 	return c.JSON(http.StatusOK, reminders)
 }
 
 func (receiver ReminderController) UpdateReminder(c echo.Context) error {
 	r := new(Models.Reminder)
-	var reminder Models.Reminder
 
 	if err := c.Bind(r); err != nil {
 		return err
@@ -54,13 +53,14 @@ func (receiver ReminderController) UpdateReminder(c echo.Context) error {
 
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	receiver.database.First(&reminder, id)
-	receiver.database.Model(&reminder).Where("id = ?", id).Updates(r)
-	return c.JSON(http.StatusOK, reminder)
+	r.Id = id
+	receiver.reminderService.UpdateReminder(*r)
+
+	return c.JSON(http.StatusOK, r)
 }
 
 func (receiver ReminderController) DeleteReminder(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
-	receiver.database.Delete(&Models.Reminder{}, id)
+	receiver.reminderService.DeleteReminder(id)
 	return c.NoContent(http.StatusNoContent)
 }
