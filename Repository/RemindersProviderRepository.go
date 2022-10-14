@@ -5,7 +5,7 @@ import (
 	"reminders.com/m/Models"
 )
 
-func New(database *gorm.DB) *RemindersProviderService {
+func NewReminderService(database *gorm.DB) *RemindersProviderService {
 	return &RemindersProviderService{database: database}
 }
 
