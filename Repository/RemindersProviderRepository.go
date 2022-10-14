@@ -1,39 +1,32 @@
-package Services
+package Repository
 
 import (
 	"gorm.io/gorm"
 	"reminders.com/m/Models"
 )
 
-func NewReminderService(database *gorm.DB) *RemindersProviderService {
-	return &RemindersProviderService{database: database}
+type RemindersProviderRepository struct {
+	Database *gorm.DB
 }
 
-type RemindersProviderService struct {
-	database *gorm.DB
+func (receiver *RemindersProviderRepository) CreateReminder(reminder *Models.Reminder) {
+	receiver.Database.Create(reminder)
 }
 
-func (receiver RemindersProviderService) CreateReminder(reminder *Models.Reminder) {
-	receiver.database.Create(reminder)
-}
-
-func (receiver RemindersProviderService) GetReminder(id int, reminder *Models.Reminder) *Models.Reminder {
-	receiver.database.First(reminder, id)
+func (receiver *RemindersProviderRepository) GetReminder(id int, reminder *Models.Reminder) *Models.Reminder {
+	receiver.Database.First(reminder, id)
 
 	return reminder
 }
 
-func (receiver RemindersProviderService) GetAllReminders(reminders []Models.Reminder) []Models.Reminder {
-
-	receiver.database.Find(&reminders)
-
-	return reminders
+func (receiver *RemindersProviderRepository) GetAllReminders(reminders *[]Models.Reminder) {
+	receiver.Database.Find(reminders)
 }
 
-func (receiver RemindersProviderService) UpdateReminder(r Models.Reminder) {
-	receiver.database.Model(&r).Updates(r)
+func (receiver *RemindersProviderRepository) UpdateReminder(r Models.Reminder) {
+	receiver.Database.Model(&r).Updates(r)
 }
 
-func (receiver RemindersProviderService) DeleteReminder(id int) {
-	receiver.database.Delete(&Models.Reminder{}, id)
+func (receiver *RemindersProviderRepository) DeleteReminder(id int) {
+	receiver.Database.Delete(&Models.Reminder{}, id)
 }

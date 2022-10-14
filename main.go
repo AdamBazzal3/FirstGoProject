@@ -1,34 +1,16 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"net/http"
+	"reminders.com/m/Claims"
 	"reminders.com/m/Models"
+	"reminders.com/m/Repository"
 	"reminders.com/m/Services"
 	"reminders.com/m/controller"
 )
-
-type Message struct {
-	Status string `json:"status"`
-	Info   string `json:"info"`
-}
-
-func handlePage(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Content-Type", "application/json")
-	var message Message
-	err := json.NewDecoder(request.Body).Decode(&message)
-	if err != nil {
-		return
-	}
-	err = json.NewEncoder(writer).Encode(message)
-	if err != nil {
-		return
-	}
-}
 
 func main() {
 	e := echo.New()
@@ -44,26 +26,44 @@ func main() {
 	}
 
 	// Migrate the schema
-	err = database.AutoMigrate(&Models.Reminder{})
+	err = database.AutoMigrate(&Models.Reminder{}, &Models.User{})
 	if err != nil {
 		return
 	}
 
-	service := Services.New(database)
-	reminderController := controller.New(service)
+	reminderService := Repository.RemindersProviderRepository{Database: database}
+	authService := Repository.UserProviderRepository{Database: database}
+	userManager := Services.UserManager{UserRepository: &authService}
+	reminderController := controller.ReminderController{ReminderService: &reminderService}
+	authController := controller.AuthenticationController{UserManager: &userManager}
+
+	//authentication routes
+	e.POST("/sign-in", authController.SignIn)
+	e.POST("/sign-up", authController.SignUp)
+
+	// Unauthenticated route
+	e.GET("/", authController.Accessible)
+
+	// Restricted group
+	r := e.Group("/restricted")
+
+	// Configure middleware with the custom claims type
+	config := middleware.JWTConfig{
+		Claims: &Claims.JwtCustomClaims{
+			Admin: true,
+		},
+		SigningKey: []byte("secret"),
+	}
+	r.Use(middleware.JWTWithConfig(config))
+	r.GET("", authController.Restricted)
 
 	// Routes
-	e.GET("/reminders", reminderController.GetAllReminders)
-	e.POST("/reminders", reminderController.CreateReminder)
-	e.GET("/reminders/:id", reminderController.GetReminder)
-	e.PUT("/reminders/:id", reminderController.UpdateReminder)
-	e.DELETE("/reminders/:id", reminderController.DeleteReminder)
+	r.GET("/reminders", reminderController.GetAllReminders)
+	r.POST("/reminders", reminderController.PostCreateReminder)
+	r.GET("/reminders/:id", reminderController.GetReminder)
+	r.PUT("/reminders/:id", reminderController.PutUpdateReminder)
+	r.DELETE("/reminders/:id", reminderController.DeleteReminder)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8080"))
-	//http.HandleFunc("/home", handlePage)
-	//err = http.ListenAndServe(":8080", nil)
-	//if err != nil {
-	//	log.Println("There was an error listening on port :8080", err)
-	//}
 }

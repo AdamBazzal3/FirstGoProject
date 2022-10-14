@@ -1,39 +1,47 @@
-package Services
+package Repository
 
 import (
 	"gorm.io/gorm"
 	"reminders.com/m/Models"
 )
 
-func NewAuthService(database *gorm.DB) *RemindersProviderService {
-	return &RemindersProviderService{database: database}
+type UserProviderRepository struct {
+	Database *gorm.DB
 }
 
-type UserProviderService struct {
-	database *gorm.DB
+func (receiver *UserProviderRepository) CreateUser(reminder *Models.User) error {
+	result := receiver.Database.Create(reminder)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }
 
-func (receiver UserProviderService) CreateUser(reminder *Models.User) {
-	receiver.database.Create(reminder)
-}
-
-func (receiver UserProviderService) GetUser(id int, reminder *Models.User) *Models.User {
-	receiver.database.First(reminder, id)
+func (receiver *UserProviderRepository) GetUserById(id int, reminder *Models.User) *Models.User {
+	receiver.Database.First(reminder, id)
 
 	return reminder
 }
 
-func (receiver UserProviderService) GetAllUsers(reminders []Models.User) []Models.User {
+func (receiver *UserProviderRepository) GetUserByUsername(username string, reminder *Models.User) error {
+	result := receiver.Database.First(reminder, "username = ?", username)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
 
-	receiver.database.Find(&reminders)
+func (receiver *UserProviderRepository) GetAllUsers(reminders []Models.User) []Models.User {
+
+	receiver.Database.Find(&reminders)
 
 	return reminders
 }
 
-func (receiver UserProviderService) UpdateUser(r Models.User) {
-	receiver.database.Model(&r).Updates(r)
+func (receiver *UserProviderRepository) UpdateUser(r Models.User) {
+	receiver.Database.Model(&r).Updates(r)
 }
 
-func (receiver UserProviderService) DeleteUser(id int) {
-	receiver.database.Delete(&Models.User{}, id)
+func (receiver *UserProviderRepository) DeleteUser(id int) {
+	receiver.Database.Delete(&Models.User{}, id)
 }
