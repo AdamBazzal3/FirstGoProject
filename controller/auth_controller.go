@@ -5,8 +5,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"reminders.com/m/Claims"
-	"reminders.com/m/Models"
 	"reminders.com/m/Services"
+	"reminders.com/m/entity"
 	"time"
 )
 
@@ -62,10 +62,10 @@ func (a *AuthenticationController) SignUp(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 
-	user := Models.User{Name: name, Username: username, Password: password}
+	user := entity.User{Name: name, Username: username, Password: password}
 	// Throws unauthorized error
 	if err := a.UserManager.SignUp(&user); err != nil {
-		return echo.ErrUnauthorized
+		return echo.ErrInternalServerError
 	}
 
 	return c.JSON(http.StatusOK, user)
