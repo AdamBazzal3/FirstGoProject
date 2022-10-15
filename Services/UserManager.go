@@ -3,12 +3,12 @@ package Services
 import (
 	"errors"
 	"golang.org/x/crypto/bcrypt"
-	"reminders.com/m/Models"
-	"reminders.com/m/Repository"
+	"reminders.com/m/entity"
+	"reminders.com/m/repository"
 )
 
 type UserManager struct {
-	UserRepository *Repository.UserProviderRepository
+	UserRepository *repository.UserProviderRepository
 }
 
 func (u *UserManager) hashPassword(password string) (string, error) {
@@ -22,7 +22,7 @@ func (u *UserManager) checkPasswordHash(password, hash string) bool {
 }
 
 func (u *UserManager) SignIn(username, password string) error {
-	var user Models.User
+	var user entity.User
 	e := "invalid username or password"
 
 	err := u.UserRepository.GetUserByUsername(username, &user)
@@ -38,7 +38,7 @@ func (u *UserManager) SignIn(username, password string) error {
 	return nil
 }
 
-func (u *UserManager) SignUp(user *Models.User) error {
+func (u *UserManager) SignUp(user *entity.User) error {
 	//password hash
 	hashedPassword, err := u.hashPassword(user.Password)
 	if err != nil {

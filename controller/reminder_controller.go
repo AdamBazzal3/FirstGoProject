@@ -3,17 +3,17 @@ package controller
 import (
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"reminders.com/m/Models"
-	"reminders.com/m/Repository"
+	"reminders.com/m/entity"
+	"reminders.com/m/repository"
 	"strconv"
 )
 
 type ReminderController struct {
-	ReminderService *Repository.RemindersProviderRepository
+	ReminderService *repository.RemindersProviderRepository
 }
 
 func (receiver *ReminderController) PostCreateReminder(c echo.Context) error {
-	reminder := &Models.Reminder{}
+	reminder := &entity.Reminder{}
 
 	if err := c.Bind(reminder); err != nil {
 		return err
@@ -28,7 +28,7 @@ func (receiver *ReminderController) GetReminder(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var reminder Models.Reminder
+	var reminder entity.Reminder
 
 	receiver.ReminderService.GetReminder(id, &reminder)
 
@@ -36,7 +36,7 @@ func (receiver *ReminderController) GetReminder(c echo.Context) error {
 }
 
 func (receiver *ReminderController) GetAllReminders(c echo.Context) error {
-	var reminders []Models.Reminder
+	var reminders []entity.Reminder
 
 	receiver.ReminderService.GetAllReminders(&reminders)
 
@@ -44,7 +44,7 @@ func (receiver *ReminderController) GetAllReminders(c echo.Context) error {
 }
 
 func (receiver *ReminderController) PutUpdateReminder(c echo.Context) error {
-	r := new(Models.Reminder)
+	r := new(entity.Reminder)
 
 	if err := c.Bind(r); err != nil {
 		return err

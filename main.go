@@ -6,10 +6,10 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"reminders.com/m/Claims"
-	"reminders.com/m/Models"
-	"reminders.com/m/Repository"
 	"reminders.com/m/Services"
 	"reminders.com/m/controller"
+	"reminders.com/m/entity"
+	"reminders.com/m/repository"
 )
 
 func main() {
@@ -26,13 +26,13 @@ func main() {
 	}
 
 	// Migrate the schema
-	err = database.AutoMigrate(&Models.Reminder{}, &Models.User{})
+	err = database.AutoMigrate(&entity.Reminder{}, &entity.User{})
 	if err != nil {
 		return
 	}
 
-	reminderService := Repository.RemindersProviderRepository{Database: database}
-	authService := Repository.UserProviderRepository{Database: database}
+	reminderService := repository.RemindersProviderRepository{Database: database}
+	authService := repository.UserProviderRepository{Database: database}
 	userManager := Services.UserManager{UserRepository: &authService}
 	reminderController := controller.ReminderController{ReminderService: &reminderService}
 	authController := controller.AuthenticationController{UserManager: &userManager}

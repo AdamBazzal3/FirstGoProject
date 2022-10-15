@@ -65,7 +65,7 @@ func (a *AuthenticationController) SignUp(c echo.Context) error {
 	user := entity.User{Name: name, Username: username, Password: password}
 	// Throws unauthorized error
 	if err := a.UserManager.SignUp(&user); err != nil {
-		return echo.ErrInternalServerError
+		return echo.ErrForbidden
 	}
 
 	return c.JSON(http.StatusOK, user)
